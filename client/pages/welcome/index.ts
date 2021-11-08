@@ -84,14 +84,12 @@ class Home extends HTMLElement {
     // LISTENER DEL BOTON "NUEVO JUEGO"
     const newGameButton = this.shadow.querySelector(".newgame-button");
     newGameButton.addEventListener("click", () => {
-      console.log("Boton para crear un juego nuevo");
       Router.go("/newroom");
     });
 
     // LISTENER DEL BOTON "NUEVO JUEGO"
     const enterRoomButton = this.shadow.querySelector(".enter-room-button");
     enterRoomButton.addEventListener("click", () => {
-      console.log("Boton para ingresar a una sala");
       Router.go("/enteroom");
     });
   }

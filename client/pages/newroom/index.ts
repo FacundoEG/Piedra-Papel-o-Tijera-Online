@@ -20,7 +20,6 @@ class NewRoomPage extends HTMLElement {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4%;
     }
     
     @media (max-width: 330px) {
@@ -32,7 +31,7 @@ class NewRoomPage extends HTMLElement {
 
     @media (min-width: 370px) {
       .welcome-container {
-        gap: 0px
+        gap: 1%
       }
     }
 
@@ -161,7 +160,50 @@ class NewRoomPage extends HTMLElement {
 
       // VERIFICA QUE SE EL FORM NO PUEDA INGRESARSE VACIO
       if (playerName.trim() !== "") {
-        console.log(playerName);
+        state.setPlayerName(playerName);
+
+        const newUserData = {
+          name: playerName,
+        };
+
+        const newUserPromise = state.createNewUser(newUserData);
+
+        //SI EL NOMBRE INGRESADO YA EXISTE, ARROJA UNA ADVERTENCIA AL USUARIO
+        newUserPromise.then((res) => {
+          if (res.message) {
+            alert(res.message);
+          }
+
+          if (res.id) {
+            const newGameRoomData = {
+              userId: res.id,
+              ownerName: playerName,
+            };
+
+            // SI LA ROOM SE CREA CORRECTAMENTE, SE DEFINE EL ID EN EL STATE
+            const newUserId = res.id;
+            const newRoomPromise = state.createNewGameRoom(newGameRoomData);
+
+            newRoomPromise.then((res) => {
+              if (res.id) {
+                const newRoomId = res.id;
+                state.setGameRoomId(newRoomId);
+
+                // SE PIDE EL ID LARGO DEL GAMEROOM PARA INGRESAR
+                const getRoomPromise = state
+                  .getGameRoomLongId(newRoomId, newUserId)
+                  .then((res) => {
+                    // UNA VEZ ADQUIRIDO EL ROOM ID LARGO, SE GUARDA EN EL STATE Y SE TRAE LA DATA DEL GAMEROOM
+                    state.setLongRoomId(res.rtdbRoomId);
+                    state.importGameRoom(res.rtdbRoomId);
+
+                    // SE AVANZA A LA SALA DE ESPERA
+                    /* Router.go("/chat") */
+                  });
+              }
+            });
+          }
+        });
       }
     });
   }

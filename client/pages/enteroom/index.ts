@@ -20,7 +20,6 @@ class EnterRoomPage extends HTMLElement {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4%;
     }
     
     @media (max-width: 330px) {
@@ -32,7 +31,7 @@ class EnterRoomPage extends HTMLElement {
 
     @media (min-width: 370px) {
       .welcome-container {
-        gap: 3%
+        gap: 1%;
       }
     }
 
@@ -78,13 +77,19 @@ class EnterRoomPage extends HTMLElement {
     .page-form{
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 5px;
     }
 
     @media (max-width: 330px) {
       .page-form {
-       margin-top: 10px;
+       margin-top: 0px;
        gap: 2px;
+      }
+    }
+
+    @media (min-width: 750px) {
+      .page-form {
+       gap: 10px;
       }
     }
 
@@ -99,7 +104,7 @@ class EnterRoomPage extends HTMLElement {
 
     .code-input,.submit-button{
       box-sizing: border-box;
-      height: 80px;
+      height: 70px;
       width: 310px;
       line-height: 50px;
       font-family: Odibee Sans;
@@ -113,7 +118,7 @@ class EnterRoomPage extends HTMLElement {
     @media (max-width: 330px) {
       .code-input,.submit-button{
         box-sizing: border-box;
-        height: 70px;
+        height: 65px;
         width: 300px;
         font-family: Odibee Sans;
         padding: 0px 10px 0px 10px;
@@ -123,9 +128,23 @@ class EnterRoomPage extends HTMLElement {
       }
     }
 
+    @media (min-width: 750px) {
+      .code-input,.submit-button{
+        box-sizing: border-box;
+        height: 80px;
+        width: 300px;
+        font-family: Odibee Sans;
+        padding: 0px 10px 0px 10px;
+        font-size: 45px;
+        cursor: pointer;
+        letter-spacing: 1px;
+      }
+    }
+
     .code-input{
       background: #FFFFFF;
       border: 10px solid #182460;
+      font-family: Odibee Sans;
       border-radius: 10px;
       text-align: center;
     }
@@ -158,11 +177,81 @@ class EnterRoomPage extends HTMLElement {
     const pageForm = this.shadow.querySelector(".page-form");
     pageForm.addEventListener("submit", (e: any) => {
       e.preventDefault();
+      // SE TOMA EL INPUT DEL ROOM ID INGRESADO
       const roomCode = e.target.roomcode.value;
+      const playerName = e.target.playername.value;
 
       // VERIFICA QUE SE EL FORM NO PUEDA INGRESARSE VACIO
-      if (roomCode.trim() !== "") {
-        console.log(roomCode);
+      if (roomCode.trim() !== "" && playerName.trim() !== "") {
+        state.setPlayerName(playerName);
+
+        const userData = {
+          name: playerName,
+        };
+
+        // VERIFICA QUE EL USUARIO INGRESE UN NOMBRE REGISTRADO
+        const nameAuthPromise = state.getNameAuth(userData);
+        nameAuthPromise.then((res) => {
+          // SI EL NOMBRE NO EXISTE, CREA EL NUEVO USER Y SE AUTENTICA CON ESE ID
+          if (res.message) {
+            console.log("Aca hay que resolver que pasa");
+
+            const newUserPromise = state.createNewUser(userData);
+            newUserPromise.then((res) => {
+              if (res.id) {
+                const userAuthId = res.id;
+                console.log(userAuthId);
+                state.setGameRoomId(roomCode);
+
+                // SE HACE UN GET PARA PODER ADQUIRIR EL ID LARGO DE LA ROOM
+                const getGameRoomPromise = state.getGameRoomLongId(
+                  roomCode,
+                  userAuthId
+                );
+
+                getGameRoomPromise.then((res) => {
+                  // SI EXISTE UN ERROR SE LE AVISA AL USUARIO
+                  if (res.message) {
+                    alert(res.message);
+                  }
+
+                  // AL OBTENER EL ID LARGO, SE AGREGA AL STATE Y SE DEFINE EL STATE
+                  if (res.rtdbRoomId) {
+                    state.setLongRoomId(res.rtdbRoomId);
+                    state.importGameRoom(res.rtdbRoomId);
+                  }
+                });
+              }
+            });
+          }
+
+          // SI EL NOMBRE EXISTE, SE RECIBE EL USER ID
+          if (res.id) {
+            const userAuthId = res.id;
+            state.setGameRoomId(roomCode);
+
+            // SE HACE UN GET PARA PODER ADQUIRIR EL ID LARGO DE LA ROOM
+            const getGameRoomPromise = state.getGameRoomLongId(
+              roomCode,
+              userAuthId
+            );
+
+            getGameRoomPromise.then((res) => {
+              // SI EXISTE UN ERROR SE LE AVISA AL USUARIO
+              if (res.message) {
+                alert(res.message);
+              }
+
+              // AL OBTENER EL ID LARGO, SE AGREGA AL STATE Y SE DEFINE EL STATE
+              if (res.rtdbRoomId) {
+                state.setLongRoomId(res.rtdbRoomId);
+                state.importGameRoom(res.rtdbRoomId);
+
+                /* Router.go("/chat"); */
+              }
+            });
+          }
+        });
       }
     });
   }
@@ -181,7 +270,8 @@ class EnterRoomPage extends HTMLElement {
     mainPage.innerHTML = `
     <welcome-title>Piedra Papel o Tijera</welcome-title>
     <form class="page-form">
-    <input class="code-input" name="roomcode" placeholder="codigo"></label>
+    <input class="code-input" name="playername" placeholder="tu nombre"></input>
+    <input class="code-input" name="roomcode" placeholder="codigo"></input>
     <button class="submit-button">Empezar</button>
     </form>
     <div class="hands-container">
