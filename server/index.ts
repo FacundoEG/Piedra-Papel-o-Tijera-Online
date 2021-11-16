@@ -65,6 +65,22 @@ app.post("/gamerooms", (req, res) => {
         // STEAMOS EL OWNER COMO EL USER QUE INGRESO EL BODY
         newRoomRef
           .set({
+            currentgame: {
+              player1: {
+                choice: "undefined",
+                online: false,
+                start: false,
+                playerName: "none",
+                playerScore: 0,
+              },
+              player2: {
+                choice: "undefined",
+                online: false,
+                start: false,
+                playerName: "none",
+                playerScore: 0,
+              },
+            },
             owner: ownerName,
             ownerId: userId,
           })
@@ -133,36 +149,47 @@ app.get("/gamerooms/:roomId", (req, res) => {
     });
 });
 
-// TRAE LA DATA DEL GAMEROOM
-app.post("/gamerooms/:id", function (req, res) {
-  const chatRoomRef = realtimeDB.ref("/gamerooms/" + req.params.id);
-  chatRoomRef.on("value", (snap) => {
-    let value = snap.val();
-  });
-  chatRoomRef.push(req.body, function () {
-    res.json("todo ok");
-  });
-});
-
 // AUTHENTICATION
 app.post("/auth", (req, res) => {
   var userName = req.body.name;
   usersCollectionRef
-  .where("name", "==", userName)
-  .get()
-  .then((searchResponse) => {
-    // VERIFICA QUE EL EMAIL DEL USER EXISTA EN ALGUN DOC
-    if (searchResponse.empty) {
-      res.status(404).json({
-        message:
-        "El nombre que ingresaste no corresponde a un usuario registrado.",
-      });
-    } else {
-      //DEVUELVE EL ID DEL USER IDENTIFICADO
-      res.status(200).json({
-        id: searchResponse.docs[0].id,
-      });
-    }
+    .where("name", "==", userName)
+    .get()
+    .then((searchResponse) => {
+      // VERIFICA QUE EL EMAIL DEL USER EXISTA EN ALGUN DOC
+      if (searchResponse.empty) {
+        res.status(404).json({
+          message:
+            "El nombre que ingresaste no corresponde a un usuario registrado.",
+        });
+      } else {
+        //DEVUELVE EL ID DEL USER IDENTIFICADO
+        res.status(200).json({
+          id: searchResponse.docs[0].id,
+        });
+      }
+    });
+});
+
+// CONNECTA A LOS JUGADORES AL GAMEROOM
+app.post("/gamedata/:id", function (req, res) {
+  const player = req.query.player;
+  const playerRef = realtimeDB.ref(
+    "/gamerooms/" + req.params.id + "/currentgame/" + player
+  );
+  return playerRef.update(req.body, () => {
+    res.status(201).json({ message: player + "Conectado" });
+  });
+});
+
+// CONNECTA A LOS JUGADORES AL GAMEROOM
+app.post("/gamestart/:id", function (req, res) {
+  const player = req.query.player;
+  const playerRef = realtimeDB.ref(
+    "/gamerooms/" + req.params.id + "/currentgame/" + player
+  );
+  return playerRef.update(req.body, () => {
+    res.status(201).json({ message: player + "listo para jugar" });
   });
 });
 

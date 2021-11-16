@@ -60,6 +60,22 @@ app.post("/gamerooms", function (req, res) {
             // STEAMOS EL OWNER COMO EL USER QUE INGRESO EL BODY
             newRoomRef_1
                 .set({
+                currentgame: {
+                    player1: {
+                        choice: "undefined",
+                        online: false,
+                        start: false,
+                        playerName: "none",
+                        playerScore: 0
+                    },
+                    player2: {
+                        choice: "undefined",
+                        online: false,
+                        start: false,
+                        playerName: "none",
+                        playerScore: 0
+                    }
+                },
                 owner: ownerName,
                 ownerId: userId
             })
@@ -128,16 +144,6 @@ app.get("/gamerooms/:roomId", function (req, res) {
         }
     });
 });
-// TRAE LA DATA DEL GAMEROOM
-app.post("/gamerooms/:id", function (req, res) {
-    var chatRoomRef = database_1.realtimeDB.ref("/gamerooms/" + req.params.id);
-    chatRoomRef.on("value", function (snap) {
-        var value = snap.val();
-    });
-    chatRoomRef.push(req.body, function () {
-        res.json("todo ok");
-    });
-});
 // AUTHENTICATION
 app.post("/auth", function (req, res) {
     var userName = req.body.name;
@@ -157,6 +163,22 @@ app.post("/auth", function (req, res) {
                 id: searchResponse.docs[0].id
             });
         }
+    });
+});
+// CONNECTA A LOS JUGADORES AL GAMEROOM
+app.post("/gamedata/:id", function (req, res) {
+    var player = req.query.player;
+    var playerRef = database_1.realtimeDB.ref("/gamerooms/" + req.params.id + "/currentgame/" + player);
+    return playerRef.update(req.body, function () {
+        res.status(201).json({ message: player + "Conectado" });
+    });
+});
+// CONNECTA A LOS JUGADORES AL GAMEROOM
+app.post("/gamestart/:id", function (req, res) {
+    var player = req.query.player;
+    var playerRef = database_1.realtimeDB.ref("/gamerooms/" + req.params.id + "/currentgame/" + player);
+    return playerRef.update(req.body, function () {
+        res.status(201).json({ message: player + "listo para jugar" });
     });
 });
 // EXPRESS STATIC

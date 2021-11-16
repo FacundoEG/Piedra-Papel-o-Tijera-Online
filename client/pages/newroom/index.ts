@@ -195,10 +195,19 @@ class NewRoomPage extends HTMLElement {
                   .then((res) => {
                     // UNA VEZ ADQUIRIDO EL ROOM ID LARGO, SE GUARDA EN EL STATE Y SE TRAE LA DATA DEL GAMEROOM
                     state.setLongRoomId(res.rtdbRoomId);
-                    state.importGameRoom(res.rtdbRoomId);
+                    state.connectToGamerooms(res.rtdbRoomId);
 
-                    // SE AVANZA A LA SALA DE ESPERA
-                    /* Router.go("/chat") */
+                    // SE ESTABLECE UN LISTENER PARA LA CONEXION QUE CAMBIARA DE PAGINA SOLO CUANDO CURRENTGAMEFLAG SEA TRUE
+                    const conectionListener = setInterval(() => {
+                      if (state.currentGameFlag()) {
+                        clearInterval(conectionListener);
+                        state.redirectPlayers();
+                      }
+                    }, 500);
+
+                    /* setTimeout(() => {
+                      state.redirectPlayers();
+                    }, 4000); */
                   });
               }
             });

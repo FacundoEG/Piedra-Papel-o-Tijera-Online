@@ -47,7 +47,6 @@ class RefusedPage extends HTMLElement {
     // LISTENER DEL BOTON "REGRESAR"
     const newGameButton = this.shadow.querySelector(".return-button");
     newGameButton.addEventListener("click", () => {
-      console.log("Boton para crear un juego nuevo");
       Router.go("/");
     });
   }

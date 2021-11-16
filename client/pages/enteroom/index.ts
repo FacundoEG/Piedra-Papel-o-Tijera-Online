@@ -194,13 +194,10 @@ class EnterRoomPage extends HTMLElement {
         nameAuthPromise.then((res) => {
           // SI EL NOMBRE NO EXISTE, CREA EL NUEVO USER Y SE AUTENTICA CON ESE ID
           if (res.message) {
-            console.log("Aca hay que resolver que pasa");
-
             const newUserPromise = state.createNewUser(userData);
             newUserPromise.then((res) => {
               if (res.id) {
                 const userAuthId = res.id;
-                console.log(userAuthId);
                 state.setGameRoomId(roomCode);
 
                 // SE HACE UN GET PARA PODER ADQUIRIR EL ID LARGO DE LA ROOM
@@ -218,7 +215,15 @@ class EnterRoomPage extends HTMLElement {
                   // AL OBTENER EL ID LARGO, SE AGREGA AL STATE Y SE DEFINE EL STATE
                   if (res.rtdbRoomId) {
                     state.setLongRoomId(res.rtdbRoomId);
-                    state.importGameRoom(res.rtdbRoomId);
+                    state.connectToGamerooms(res.rtdbRoomId);
+
+                    // SE ESTABLECE UN LISTENER PARA LA CONEXION QUE CAMBIARA DE PAGINA SOLO CUANDO CURRENTGAMEFLAG SEA TRUE
+                    const conectionListener = setInterval(() => {
+                      if (state.currentGameFlag()) {
+                        clearInterval(conectionListener);
+                        state.redirectPlayers();
+                      }
+                    }, 500);
                   }
                 });
               }
@@ -242,12 +247,18 @@ class EnterRoomPage extends HTMLElement {
                 alert(res.message);
               }
 
-              // AL OBTENER EL ID LARGO, SE AGREGA AL STATE Y SE DEFINE EL STATE
+              // AL OBTENER EL ID LARGO, SE AGREGA AL STATE Y CONECTA A LOS JUGADORES A LA PARTIDA
               if (res.rtdbRoomId) {
                 state.setLongRoomId(res.rtdbRoomId);
-                state.importGameRoom(res.rtdbRoomId);
+                state.connectToGamerooms(res.rtdbRoomId);
 
-                /* Router.go("/chat"); */
+                // SE ESTABLECE UN LISTENER PARA LA CONEXION QUE CAMBIARA DE PAGINA SOLO CUANDO CURRENTGAMEFLAG SEA TRUE
+                const conectionListener = setInterval(() => {
+                  if (state.currentGameFlag()) {
+                    clearInterval(conectionListener);
+                    state.redirectPlayers();
+                  }
+                }, 500);
               }
             });
           }

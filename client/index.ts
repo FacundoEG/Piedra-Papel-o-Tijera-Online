@@ -7,6 +7,7 @@ import "./pages/enteroom";
 import "./pages/newroom";
 import "./pages/enteroom";
 import "./pages/refused";
+import "./pages/waitingroom";
 import "./router";
 
 (function () {

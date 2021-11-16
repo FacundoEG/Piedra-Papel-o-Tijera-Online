@@ -1,6 +1,7 @@
 // Guardar info para compartir entre pages / componentes
 // Guardar en localStorage lo necesario
 // Interactuar con localStorage / API
+import { Router } from "@vaadin/router";
 import { realtimeDB } from "./rtdb";
 
 /* const API_BASE_URL = "http://localhost:3000"; */
@@ -19,10 +20,22 @@ const state = {
   data: {
     // SE GUARDA LA JUGADA EN EL MOMENTO
     currentGame: {
-      myPlay: "",
-      computerPlay: "",
+      /* 
+      player1: {
+        choice: "undefined",
+        online: true,
+        playerName: "Pepe",
+        playerScore: 0,
+        start: true,
+      },
+      player2: {
+        choice: "undefined",
+        online: true,
+        playerName: "Juan",
+        playerScore: 0,
+        start: true,
+      }, */
     },
-
     playerName: null,
     roomId: null,
     roomIdLong: null,
@@ -95,20 +108,6 @@ const state = {
       });
   },
 
-  connectToGamerooms() {
-    const chatRoomRef = realtimeDB.ref("/gamerooms/1234/current-game");
-    chatRoomRef.on("value", (snap) => {
-      let value = snap.val();
-      console.log(value);
-
-      let cantidadDeJugadores = Object.entries(value).length;
-
-      if (cantidadDeJugadores == 2) {
-        console.log("la sala esta llena");
-      }
-    });
-  },
-
   // CREA UNA NUEVA ROOM PONIENDOLO AL USUARIO COMO OWNER
   createNewGameRoom(gameroomData) {
     return fetch(API_BASE_URL + "/gamerooms", {
@@ -155,13 +154,140 @@ const state = {
       });
   },
 
-  // IMPORTA LA DATA DEL GAMEROOM
-  importGameRoom(roomId) {
-    const chatroomRef = realtimeDB.ref("/gamerooms/" + roomId);
+  // DEVUELVE LA REFEFENCIA DE LA POSICIÓN DEL USUARIO QUE ESTA CONECTADO ACTUALMENTE
+  getSessionUserRef() {
+    const cs = state.getState();
+    const cg = cs.currentGame;
+    const result = Object.entries(cg);
+    const sessionUser = result.find((player) => {
+      return player[1]["playerName"] === state.getState().playerName;
+    });
+    return sessionUser;
+  },
+
+  getRivalUserRef() {
+    const cs = state.getState();
+    const cg = cs.currentGame;
+    const result = Object.entries(cg);
+    const rivalUser = result.find((player) => {
+      return player[1]["playerName"] !== state.getState().playerName;
+    });
+    return rivalUser;
+  },
+
+  // IMPORTA LA DATA DEL GAMEROOM Y ESCUCHA LOS CAMBIOS
+  connectToGamerooms(roomId) {
+    const chatroomRef = realtimeDB.ref("/gamerooms/" + roomId + "/currentgame");
     chatroomRef.on("value", (snapshot) => {
       const gameRoomData = snapshot.val();
-      console.log(gameRoomData);
+      const playersReference = Object.entries(gameRoomData);
+
+      // CARGA LA DATA AL STATE
+      const currentState = this.getState();
+      currentState.currentGame = gameRoomData;
+      this.setState(currentState);
     });
+  },
+
+  // REDIRECCIONA A LOS JUGADORES DEPENDIENDO COMO ESTE EL STATE
+  redirectPlayers() {
+    const cs = state.getState();
+    const currentGame = cs.currentGame;
+
+    // SI EL PLAYER 1 ESTA DESCONECTADO
+    if (
+      currentGame.player1.playerName == "none" &&
+      currentGame.player1.online == false
+    ) {
+      // PROMESA DE CONEXIÓN DEL JUGADOR 1
+      const playerConnectionPromise = state.connectPlayer("player1");
+
+      playerConnectionPromise.then(() => {
+        Router.go("/waitingroom");
+      });
+    }
+
+    // SI EL PLAYER 1 ESTA CONECTADO Y EL 2 DESCONECTADO
+    if (
+      currentGame.player1.playerName !== "none" &&
+      currentGame.player1.online !== false &&
+      currentGame.player2.playerName === "none" &&
+      currentGame.player2.online === false
+    ) {
+      // PROMESA DE CONEXIÓN DEL JUGADOR 2
+      const playerConnectionPromise = state.connectPlayer("player2");
+
+      playerConnectionPromise.then(() => {
+        Router.go("/waitingroom");
+      });
+    }
+
+    // SI AMBOS PLAYERS ESTAN CONECTADOS
+    else if (
+      currentGame.player1.online === true &&
+      currentGame.player1.online === true
+    ) {
+      Router.go("/refused");
+    }
+  },
+
+  // VERIFICA QUE SI HAY PLAYER 1 Y PLAYER 2 EN CURRENT GAME, DEVUELVA UN TRUE
+  currentGameFlag() {
+    let cs = state.getState();
+    let currentGame = cs.currentGame;
+    if (currentGame.player1 && currentGame.player2) {
+      return true;
+    }
+  },
+
+  // CONECTA A LOS JUGADORES A LA GAMEROOM
+  connectPlayer(player: string) {
+    const currentState = this.getState();
+    const currentGameData = currentState.currentGame[`${player}`];
+
+    // TOMA EL NOMBRE Y EL ROOMID
+    const gameRoomId = currentState.roomIdLong;
+    const playerName = currentState.playerName;
+
+    const connectedUserData = {
+      ...currentGameData,
+      online: true,
+      playerName: playerName,
+    };
+
+    // ACTUALIZA LA DATA DENTRO DE LA RTDB
+    return fetch(
+      API_BASE_URL + "/gamedata/" + gameRoomId + "?player=" + player,
+      {
+        headers: { "content-type": "application/json" },
+        method: "post",
+        body: JSON.stringify(connectedUserData),
+      }
+    );
+  },
+
+  // CONECTA A LOS JUGADORES A LA GAMEROOM
+  letStartPlayer(player: string) {
+    const currentState = this.getState();
+    const currentGameData = currentState.currentGame[`${player}`];
+
+    // TOMA EL ROOMID
+    const gameRoomId = currentState.roomIdLong;
+
+    const connectedUserData = {
+      ...currentGameData,
+      start: true,
+    };
+
+    // ACTUALIZA LA DATA DENTRO DE LA RTDB
+    return fetch(
+      API_BASE_URL + "/gamestart/" + gameRoomId + "?player=" + player,
+      {
+        headers: { "content-type": "application/json" },
+        method: "post",
+        body: JSON.stringify(connectedUserData),
+      }
+    );
   },
 
   //////////// FRONT-END /////////////
