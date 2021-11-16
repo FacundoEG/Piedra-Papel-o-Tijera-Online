@@ -19,6 +19,7 @@ class NewRoomPage extends HTMLElement {
       background-image: url(${backgroundIMG});
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
       align-items: center;
     }
     
@@ -45,7 +46,6 @@ class NewRoomPage extends HTMLElement {
     .hands-container {
       display: flex;
       gap: 35px;
-      position: absolute;
       bottom: -5%;
     }
 

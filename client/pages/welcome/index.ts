@@ -22,6 +22,7 @@ class Home extends HTMLElement {
       flex-direction: column;
       align-items: center;
       gap: 4%;
+      justify-content: space-between;
     }
     
     @media (min-width: 310px) {
@@ -48,7 +49,6 @@ class Home extends HTMLElement {
     .hands-container {
       display: flex;
       gap: 35px;
-      position: absolute;
       bottom: -5%;
     }
 
@@ -74,6 +74,18 @@ class Home extends HTMLElement {
     @media (min-width: 750px) {
       .welcome-hands {
         height: 190px;
+      }
+    }
+
+    .menu-div{
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    @media (max-width: 400px) {
+      .menu-div {
+       gap: 2px;
       }
     }
     `;
@@ -107,8 +119,10 @@ class Home extends HTMLElement {
     //SE RENDERIZA
     mainPage.innerHTML = `
     <welcome-title>Piedra Papel o Tijera</welcome-title>
+    <div class="menu-div">    
     <menu-button class="newgame-button">Nuevo juego</menu-button>
     <menu-button class="enter-room-button">Ingresar a una sala</menu-button>
+    </div>
     <div class="hands-container">
     <img class="welcome-hands" src=${tijerasIMG}>
     <img class="welcome-hands" src=${piedraImg}>

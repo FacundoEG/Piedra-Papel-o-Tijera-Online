@@ -22,6 +22,7 @@ class Home extends HTMLElement {
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: space-between;
       gap: 4%;
     }
     
@@ -98,7 +99,6 @@ class Home extends HTMLElement {
     }
 
     .start-container{ 
-      padding-top: 3%;
       display: none;
       align-self: center;
       flex-direction: column;
@@ -107,7 +107,6 @@ class Home extends HTMLElement {
     }
 
     .code-container{
-      padding-top: 8%;
       display: flex;
       align-self: center;
       flex-direction: column;
@@ -122,7 +121,6 @@ class Home extends HTMLElement {
     .hands-container {
       display: flex;
       gap: 35px;
-      position: absolute;
       bottom: -5%;
     }
 

@@ -20,6 +20,7 @@ class EnterRoomPage extends HTMLElement {
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: space-between;
     }
     
     @media (max-width: 330px) {
@@ -45,7 +46,6 @@ class EnterRoomPage extends HTMLElement {
     .hands-container {
       display: flex;
       gap: 35px;
-      position: absolute;
       bottom: -5%;
     }
 
