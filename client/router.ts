@@ -8,4 +8,5 @@ router.setRoutes([
   { path: "/enteroom", component: "enteroom-page" },
   { path: "/refused", component: "refused-page" },
   { path: "/waitingroom", component: "waiting-room" },
+  { path: "/game", component: "game-page" },
 ]);

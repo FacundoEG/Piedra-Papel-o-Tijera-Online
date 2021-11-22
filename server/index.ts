@@ -178,18 +178,62 @@ app.post("/gamedata/:id", function (req, res) {
     "/gamerooms/" + req.params.id + "/currentgame/" + player
   );
   return playerRef.update(req.body, () => {
-    res.status(201).json({ message: player + "Conectado" });
+    res.status(201).json({ message: player + " conectado" });
   });
 });
 
-// CONNECTA A LOS JUGADORES AL GAMEROOM
+// DEFINE QUE EL JUGADOR ESTA LISTO PARA INICIAR
 app.post("/gamestart/:id", function (req, res) {
   const player = req.query.player;
   const playerRef = realtimeDB.ref(
     "/gamerooms/" + req.params.id + "/currentgame/" + player
   );
   return playerRef.update(req.body, () => {
-    res.status(201).json({ message: player + "listo para jugar" });
+    res.status(201).json({ message: player + " listo para jugar" });
+  });
+});
+
+// DESCONECTA A LOS JUGADORES AL GAMEROOM
+app.post("/disconectplayer/:id", function (req, res) {
+  const player = req.query.player;
+  const playerRef = realtimeDB.ref(
+    "/gamerooms/" + req.params.id + "/currentgame/" + player
+  );
+  return playerRef.update(req.body, () => {
+    res.status(201).json({ message: player + "desconectado" });
+  });
+});
+
+// RESETEA LA JUGADA Y ENVIA A LOS JUGADORES AL GAMEROOM
+app.post("/restartplayer/:id", function (req, res) {
+  const player = req.query.player;
+  const playerRef = realtimeDB.ref(
+    "/gamerooms/" + req.params.id + "/currentgame/" + player
+  );
+  return playerRef.update(req.body, () => {
+    res.status(201).json({ message: player + "desconectado" });
+  });
+});
+
+// DEFINE QUE EL JUGADOR ESTA LISTO PARA INICIAR
+app.post("/gamestart/:id", function (req, res) {
+  const player = req.query.player;
+  const playerRef = realtimeDB.ref(
+    "/gamerooms/" + req.params.id + "/currentgame/" + player
+  );
+  return playerRef.update(req.body, () => {
+    res.status(201).json({ message: player + " listo para jugar" });
+  });
+});
+
+// DEFINE QUE EL JUGADOR ESTA LISTO PARA INICIAR
+app.post("/handchoice/:id", function (req, res) {
+  const player = req.query.player;
+  const playerRef = realtimeDB.ref(
+    "/gamerooms/" + req.params.id + "/currentgame/" + player
+  );
+  return playerRef.update(req.body, () => {
+    res.status(201).json({ message: player + " realizo su jugada" });
   });
 });
 

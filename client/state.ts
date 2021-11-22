@@ -34,7 +34,8 @@ const state = {
         playerName: "Juan",
         playerScore: 0,
         start: true,
-      }, */
+      },
+     */
     },
     playerName: null,
     roomId: null,
@@ -165,6 +166,7 @@ const state = {
     return sessionUser;
   },
 
+  // DEVUELVE LA REFEFENCIA DEL RIVAL DEL USUARIO QUE ESTA CONECTADO ACTUALMENTE
   getRivalUserRef() {
     const cs = state.getState();
     const cg = cs.currentGame;
@@ -193,22 +195,28 @@ const state = {
   redirectPlayers() {
     const cs = state.getState();
     const currentGame = cs.currentGame;
+    const statePlayerName = cs.playerName;
+    const playersData = Object.values(currentGame);
 
-    // SI EL PLAYER 1 ESTA DESCONECTADO
+    //  SE PIDE UNA REFERENCIA DE LOS USUARIOS YA REGISTRADOS
+    const registeredPlayer = playersData.find((player) => {
+      return player["playerName"].includes(statePlayerName);
+    });
+
+    // SI EL PLAYER 1 ESTA DESCONECTADO Y NO REGISTRADO LO CONECTA AL PLAYER 1
     if (
       currentGame.player1.playerName == "none" &&
       currentGame.player1.online == false
     ) {
       // PROMESA DE CONEXIÓN DEL JUGADOR 1
       const playerConnectionPromise = state.connectPlayer("player1");
-
       playerConnectionPromise.then(() => {
         Router.go("/waitingroom");
       });
     }
 
-    // SI EL PLAYER 1 ESTA CONECTADO Y EL 2 DESCONECTADO
-    if (
+    // SI EL PLAYER 1 ESTA CONECTADO Y REGISTRADO & EL 2 DESCONECTADO Y SIN REGISTRAR, LO REGISTRA/CONECTA AL PLAYER 2
+    else if (
       currentGame.player1.playerName !== "none" &&
       currentGame.player1.online !== false &&
       currentGame.player2.playerName === "none" &&
@@ -216,18 +224,34 @@ const state = {
     ) {
       // PROMESA DE CONEXIÓN DEL JUGADOR 2
       const playerConnectionPromise = state.connectPlayer("player2");
-
       playerConnectionPromise.then(() => {
         Router.go("/waitingroom");
       });
     }
 
-    // SI AMBOS PLAYERS ESTAN CONECTADOS
+    // SI AMBOS USUARIOS ESTAN DECONECTADOS
+    else if (
+      currentGame.player1.online === false ||
+      currentGame.player2.online === false
+    ) {
+      // VERIFICA QUE SI ESTAN REGISTRADOS SE CONECTAN Y PASAN AL WAITING ROOM
+      if (registeredPlayer) {
+        state.connectPlayer(state.getSessionUserRef()[0]);
+        Router.go("/waitingroom");
+      }
+      // SI NO ESTAN REGISTRADOS SE VAN A REFUSED
+      if (!registeredPlayer) {
+        Router.go("/refused");
+      }
+    }
+
+    // SI AMBOS PLAYERS ESTAN CONECTADOS Y REGISTRADOS
     else if (
       currentGame.player1.online === true &&
-      currentGame.player1.online === true
+      currentGame.player2.online === true
     ) {
-      Router.go("/refused");
+      // REVISA QUE EL USUARIO INGRESE EL NOMBRE DE ALGUN USUARIO REGISTRADO, DE NO SER ASÍ, LO ENVIA A /REFUSED
+      registeredPlayer ? Router.go("/waitingroom") : Router.go("/refused");
     }
   },
 
@@ -266,7 +290,59 @@ const state = {
     );
   },
 
-  // CONECTA A LOS JUGADORES A LA GAMEROOM
+  // DESCONECTA A LOS JUGADORES A LA GAMEROOM
+  disconnectPlayer(player: string) {
+    const currentState = this.getState();
+    const currentGameData = currentState.currentGame[`${player}`];
+
+    // TOMA EL ROOMID
+    const gameRoomId = currentState.roomIdLong;
+
+    const connectedUserData = {
+      ...currentGameData,
+      choice: "undefined",
+      online: false,
+      start: false,
+    };
+
+    // ACTUALIZA LA DATA DENTRO DE LA RTDB
+    return fetch(
+      API_BASE_URL + "/disconectplayer/" + gameRoomId + "?player=" + player,
+      {
+        headers: { "content-type": "application/json" },
+        method: "post",
+        body: JSON.stringify(connectedUserData),
+      }
+    );
+  },
+
+  // DESCONECTA A LOS JUGADORES A LA GAMEROOM
+  restartPlayer(player: string) {
+    const currentState = this.getState();
+    const currentGameData = currentState.currentGame[`${player}`];
+
+    // TOMA EL ROOMID
+    const gameRoomId = currentState.roomIdLong;
+
+    const connectedUserData = {
+      ...currentGameData,
+      choice: "undefined",
+      online: true,
+      start: false,
+    };
+
+    // ACTUALIZA LA DATA DENTRO DE LA RTDB
+    return fetch(
+      API_BASE_URL + "/restartplayer/" + gameRoomId + "?player=" + player,
+      {
+        headers: { "content-type": "application/json" },
+        method: "post",
+        body: JSON.stringify(connectedUserData),
+      }
+    );
+  },
+
+  // INDICA QUE EL JUGADOR ESTA LISTO PARA EMPEZAR
   letStartPlayer(player: string) {
     const currentState = this.getState();
     const currentGameData = currentState.currentGame[`${player}`];
@@ -290,6 +366,30 @@ const state = {
     );
   },
 
+  // SELECCIONA LA JUGADA DE LA MANO
+  makeHandChoice(player: string, move: string) {
+    const currentState = this.getState();
+    const currentGameData = currentState.currentGame[`${player}`];
+
+    // TOMA EL ROOMID
+    const gameRoomId = currentState.roomIdLong;
+
+    const connectedUserData = {
+      ...currentGameData,
+      choice: move,
+    };
+
+    // ACTUALIZA LA DATA DENTRO DE LA RTDB
+    return fetch(
+      API_BASE_URL + "/handchoice/" + gameRoomId + "?player=" + player,
+      {
+        headers: { "content-type": "application/json" },
+        method: "post",
+        body: JSON.stringify(connectedUserData),
+      }
+    );
+  },
+
   //////////// FRONT-END /////////////
 
   // 1 - SETEA/DEFINE LA JUGADA REALIZADA
@@ -305,7 +405,6 @@ const state = {
     const ganeConPiedra = myPlay == "piedra" && computerPlay == "tijeras";
     const ganeConPapel = myPlay == "papel" && computerPlay == "piedra";
     if (ganeConPapel || ganeConTijeras || ganeConPiedra) {
-      state.setPoints("myScore");
       return "victoria";
     }
 
@@ -314,7 +413,6 @@ const state = {
     const perdiConPiedra = myPlay == "piedra" && computerPlay == "papel";
     const perdiConPapel = myPlay == "papel" && computerPlay == "tijeras";
     if (perdiConPapel || perdiConTijeras || perdiConPiedra) {
-      state.setPoints("computerScore");
       return "derrota";
     }
 

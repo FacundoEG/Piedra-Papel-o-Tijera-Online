@@ -160,7 +160,7 @@ class Home extends HTMLElement {
     const cs = this.currentGame;
     const playersData = Object.values(cs);
 
-    // DECLARA UN FLAG SI AMBOS JUGADORES ESTAN ONLINE SE DEVOLVERA TRUE
+    // DECLARA UN FLAG QUE SI AMBOS JUGADORES ESTAN ONLINE SE DEVOLVERA TRUE
     const bothPlayersOnline =
       cs.player1.online == true && cs.player2.online == true;
     // SI AMBOS JUGADORES ESTAN CONECTADOS, APARECE EL START-CONTAINER
@@ -171,12 +171,12 @@ class Home extends HTMLElement {
       startContainer.setAttribute("style", "display:flex");
     }
 
-    // REVISA SI HAY JUGADORES QUE TENGAN START = FALSE
+    // DEVUELVE SI HAY JUGADORES QUE NO HAYAN PRESIONADO START
     const hasPlayersNotStarted = playersData.find((player) => {
       return player["start"] == false;
     });
 
-    // DEVUELVE UN ARRAY CON LA CANTIDAD DE JUGADORES NO CONECTADOS
+    // DECLARA UN ARRAY CON LA CANTIDAD DE QUE NO PRESIONARON START
     const notConnectedUsers = playersData.filter((player) => {
       return player["start"] == false;
     });
@@ -190,14 +190,14 @@ class Home extends HTMLElement {
       state.letStartPlayer(actualPlayerRef);
     });
 
-    // PARA QUE ESTO SUCEDA, SOLO TIENE QUE HABER UN JUGADOR SIN CONECTARSE
+    // PARA QUE ESTO SUCEDA, SOLO TIENE QUE HABER UN SOLO JUGADOR SIN CONECTARSE
     if (notConnectedUsers.length == 1) {
       // SE HACE REFERENCIA AL JUGADOR QUE NO INICIO PARTIDA COINCIDIENDO CON EL PLAYERNAME DEL STATE
       const sessionUserNoReady =
         hasPlayersNotStarted["playerName"] ==
         state.getSessionUserRef()[1]["playerName"];
 
-      // SI EL USUARIO PRESIONO JUGAR Y AUN FALTA QUE EL OTRO USUARIO PONGA JUGAR, SE LE MODIFICARA EL CONTAINER
+      // SI EL USUARIO PRESIONO JUGAR Y AUN FALTA QUE EL OTRO USUARIO LO PONGA, SOLO SE LE MODIFICA EL CONTAINER AL QUE SI ESTA LISTO
       if (sessionUserNoReady == false) {
         const startContainer = this.shadow.querySelector(".start-container");
 
@@ -228,14 +228,16 @@ class Home extends HTMLElement {
     this.stateData = currentState;
     this.render();
   }
+
   render() {
     //SE CREA EL DIV DONDE SE ALOJARA LA PAGE
     const mainPage = document.createElement("main");
     mainPage.classList.add("welcome-container");
 
     const currentGame = this.currentGame;
+    console.log(currentGame);
 
-    //SE RENDERIZA
+    //SE RENDERIZA JUNTO CON LOS DATOS DESDE EL STATE
     mainPage.innerHTML = `
     <header class="score-header">
      <div class="players-name">
@@ -283,6 +285,13 @@ class Home extends HTMLElement {
 
     // SE AGREGAN LOS LISTENERS
     this.addListeners();
+
+    // SI EL USUARIO CIERRA LA PAGINA, SU USUARIO SE DESCOENCTA DE LA RTBD
+    window.onbeforeunload = function disconectPlayer() {
+      console.log("esta funcando el onbefore");
+      const actualPlayerRef = state.getSessionUserRef()[0];
+      state.disconnectPlayer(actualPlayerRef);
+    };
   }
 }
 customElements.define("waiting-room", Home);
