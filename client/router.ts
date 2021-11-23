@@ -9,4 +9,7 @@ router.setRoutes([
   { path: "/refused", component: "refused-page" },
   { path: "/waitingroom", component: "waiting-room" },
   { path: "/game", component: "game-page" },
+  { path: "/win-page", component: "win-page" },
+  { path: "/lose-page", component: "lose-page" },
+  { path: "/draw-page", component: "draw-page" },
 ]);

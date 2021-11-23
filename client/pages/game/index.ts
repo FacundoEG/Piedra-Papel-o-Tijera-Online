@@ -122,11 +122,7 @@ class Game extends HTMLElement {
         let jugada = e.detail.jugada;
         const actualPlayerRef = state.getSessionUserRef()[0];
 
-        const playPromise = state.makeHandChoice(actualPlayerRef, jugada);
-
-        playPromise.then(() => {
-          console.log("la promesa se realizo");
-        });
+        state.makeHandChoice(actualPlayerRef, jugada);
       });
     }
   }
@@ -194,7 +190,6 @@ class Game extends HTMLElement {
             `;
 
             const newGameButton = mainPage.querySelector(".waitingroom-button");
-            console.log(newGameButton);
             newGameButton.addEventListener("click", () => {
               const actualPlayerRef = state.getSessionUserRef()[0];
               const restartPromise = state.restartPlayer(actualPlayerRef);
@@ -206,12 +201,68 @@ class Game extends HTMLElement {
 
           // SI AMBOS JUGADORES JUEGAN
           if (!playersDontChoice) {
+            // SE GUARDA EL MOVIMIENTO DE CADA JUGADOR
             const playerMove = playerData["choice"];
             const rivalMove = rivalData["choice"];
 
+            // SE RENDERIZAN LAS MANOS EN EL MAINPAGE JUNTO CON SUS CARACTERISTICAS
+            mainPage.innerHTML = `
+              <div class="final-game-container"></>
+              <hand-comp jugada=${rivalMove}></hand-comp>
+              <hand-comp jugada=${playerMove}></hand-comp>
+              </div>
+              `;
+
+            const handPlayerEl = mainPage.getElementsByTagName("hand-comp");
+            handPlayerEl[1].shadowRoot.children[0].innerHTML = `
+               .hand{
+              height: 240px;
+              position: absolute;
+              bottom: 5%;
+              cursor: pointer;
+              }
+              `;
+
+            handPlayerEl[0].shadowRoot.children[0].innerHTML = `
+              .hand{
+               height: 220px;
+               position: absolute;
+               top: 5%;
+               cursor: pointer;
+              transform: rotate(180deg);
+              }
+              `;
+
+            // SE GUARDA EL RESULTADO DE LA PARTIDA PARA CADA PLAYER
             const finalResult = state.definePlay(playerMove, rivalMove);
 
-            console.log(finalResult);
+            //ESTA FUNCION REDIRECCIONA AL JUGADOR A LA PAGINA DEPENDIENDO EL RESULTADO FINAL
+            function redirect() {
+              const actualPlayerRef = state.getSessionUserRef()[0];
+              const restartPromise = state.restartPlayer(actualPlayerRef);
+              if (finalResult == "victoria") {
+                console.log("va hacia victoria");
+
+                restartPromise.then(() => {
+                  Router.go("/win-page");
+                });
+              }
+              if (finalResult == "derrota") {
+                restartPromise.then(() => {
+                  Router.go("/lose-page");
+                });
+              }
+              if (finalResult == "empate") {
+                restartPromise.then(() => {
+                  Router.go("/draw-page");
+                });
+              }
+            }
+
+            //A LOS 2 SEGUNDOS DE DEVOLVER EL RESULTADO SE REDIRECCIONA A LOS JUGADORES
+            setTimeout(() => {
+              redirect();
+            }, 2000);
           }
         }
 

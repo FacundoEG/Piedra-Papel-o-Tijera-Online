@@ -9,6 +9,9 @@ import "./pages/enteroom";
 import "./pages/refused";
 import "./pages/waitingroom";
 import "./pages/game";
+import "./pages/win";
+import "./pages/lose";
+import "./pages/draw";
 import "./router";
 
 (function () {
