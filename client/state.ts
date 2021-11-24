@@ -58,8 +58,8 @@ const state = {
     console.log("El nuevo estado es:", newState);
     for (const callback of this.listeners) {
       callback();
-    } /* 
-    localStorage.setItem("game", JSON.stringify(newState)); */
+    }
+    sessionStorage.setItem("actualgame", JSON.stringify(newState));
   },
 
   //SUBSCRIBER
@@ -234,6 +234,28 @@ const state = {
         currentState.roomScore = scoreData;
         this.setState(currentState);
       });
+    });
+  },
+
+  // IMPORTA LA DATA DEL GAMEROOM Y ESCUCHA LOS CAMBIOS
+  reconnectToGamerooms(roomId) {
+    const chatroomRef = realtimeDB.ref("/gamerooms/" + roomId + "/currentgame");
+    chatroomRef.on("value", (snapshot) => {
+      const gameRoomData = snapshot.val();
+      console.log(gameRoomData);
+
+      // CARGA LA DATA AL STATE
+      const currentState = this.getState();
+      currentState.currentGame = gameRoomData;
+      /* 
+      const fireBaseScorePromise = state.importGameRoomScore(
+        currentState.roomId
+      );
+
+      fireBaseScorePromise.then((scoreData) => {
+        currentState.roomScore = scoreData;
+        this.setState(currentState);
+      }); */
     });
   },
 
@@ -526,15 +548,17 @@ const state = {
     return resulado;
   },
 
-  //SI NO HAY REGISTRO DE "GAME", SE ASEGURA DE INICIAR EL STATE VACIO
+  //SI NO HAY REGISTRO DE "ACTUALGAME", SE ASEGURA DE INICIAR EL STATE VACIO
   restoreState() {
     const firstState = state.getState();
-    if (!localStorage.game) {
+    if (!sessionStorage.actualgame) {
       state.setState(firstState);
     } else {
-      const lastState = localStorage.getItem("game");
+      // SI HAY REGISTRO DE "ACTUALGAME" CARGA EL ESTADO CON EL ACTUALGAME Y RECONECTA A LA RTDB
+      const lastState = sessionStorage.getItem("actualgame");
       const lastStateParsed = JSON.parse(lastState);
-      state.data = lastStateParsed;
+      state.setState(lastStateParsed);
+      state.connectToGamerooms(lastStateParsed["roomIdLong"]);
     }
   },
 };
