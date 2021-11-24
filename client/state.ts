@@ -40,12 +40,7 @@ const state = {
     playerName: null,
     roomId: null,
     roomIdLong: null,
-
-    // SE GUARDAN OBJETOS DENTRO DEL ARRAY CON LAS JUGADAS HECHAS
-    history: [],
-
-    // SE GUARDAN LOS RESULTADOS FINALES
-    results: { myScore: 0, computerScore: 0 },
+    roomScore: null,
   },
 
   listeners: [],
@@ -124,6 +119,50 @@ const state = {
       });
   },
 
+  // AGREGA EL SCORE DEL PLAYER 2 A FIRESTORE UNA VEZ QUE SE AGREGA UN SEGUNDO JUGADOR A LA SALA
+  setPlayer2Score(playerData, roomId) {
+    return fetch(API_BASE_URL + "/gameroomsscore/" + roomId, {
+      method: "post",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(playerData),
+    })
+      .then((res) => {
+        return res.json();
+      })
+      .then((finalres) => {
+        return finalres;
+      });
+  },
+
+  // AGREGA EL SCORE DEL PLAYER 2 A FIRESTORE UNA VEZ QUE SE AGREGA UN SEGUNDO JUGADOR A LA SALA
+  addWinScore(playerData, roomId) {
+    return fetch(API_BASE_URL + "/gamedatascore/" + roomId, {
+      method: "post",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(playerData),
+    })
+      .then((res) => {
+        return res.json();
+      })
+      .then((finalres) => {
+        return finalres;
+      });
+  },
+
+  // AGREGA EL SCORE DEL PLAYER 2 A FIRESTORE UNA VEZ QUE SE AGREGA UN SEGUNDO JUGADOR A LA SALA
+  importGameRoomScore(roomId) {
+    return fetch(API_BASE_URL + "/gameroomsscores/" + roomId, {
+      method: "get",
+      headers: { "content-type": "application/json" },
+    })
+      .then((res) => {
+        return res.json();
+      })
+      .then((finalres) => {
+        return finalres;
+      });
+  },
+
   // INGRESA EL EMAIL DEL USUARIO Y RECIBE SU USER ID
   getNameAuth(userName) {
     return fetch(API_BASE_URL + "/auth", {
@@ -182,12 +221,19 @@ const state = {
     const chatroomRef = realtimeDB.ref("/gamerooms/" + roomId + "/currentgame");
     chatroomRef.on("value", (snapshot) => {
       const gameRoomData = snapshot.val();
-      const playersReference = Object.entries(gameRoomData);
 
       // CARGA LA DATA AL STATE
       const currentState = this.getState();
       currentState.currentGame = gameRoomData;
-      this.setState(currentState);
+
+      const fireBaseScorePromise = state.importGameRoomScore(
+        currentState.roomId
+      );
+
+      fireBaseScorePromise.then((scoreData) => {
+        currentState.roomScore = scoreData;
+        this.setState(currentState);
+      });
     });
   },
 
@@ -223,9 +269,26 @@ const state = {
       currentGame.player2.online === false
     ) {
       // PROMESA DE CONEXIÓN DEL JUGADOR 2
-      const playerConnectionPromise = state.connectPlayer("player2");
-      playerConnectionPromise.then(() => {
-        Router.go("/waitingroom");
+      // SE VUELVEN A PEDIR LOS DATOS AL STATE
+      const cs = state.getState();
+      const actualRoomId = cs.roomId;
+      const stateName = cs.playerName;
+
+      const newUserScoreData = {
+        playerName: stateName,
+      };
+
+      // SE REALIZA LA PROMESA PARA AGREGAR AL NUEVO JUGADOR A LOS SCORES DE FIREBASE
+      const player2ScorePromise = state.setPlayer2Score(
+        newUserScoreData,
+        actualRoomId
+      );
+
+      player2ScorePromise.then(() => {
+        const playerConnectionPromise = state.connectPlayer("player2");
+        playerConnectionPromise.then(() => {
+          Router.go("/waitingroom");
+        });
       });
     }
 
@@ -260,6 +323,15 @@ const state = {
     let cs = state.getState();
     let currentGame = cs.currentGame;
     if (currentGame.player1 && currentGame.player2) {
+      return true;
+    }
+  },
+
+  // VERIFICA QUE EL ROOMSCORE NO ESTE VACIO
+  currentScoreFlag() {
+    let cs = state.getState();
+    let currentScore = cs.roomScore;
+    if (currentScore !== null) {
       return true;
     }
   },
@@ -432,12 +504,6 @@ const state = {
     CurrentState.results[user] = score;
   },
 
-  // 4- AGREGA LA PARTIDA AL HISTORIAL
-  pushNewGameHistory(game: Game) {
-    const history = state.getState().history;
-    history.push(game);
-  },
-
   //DEFINE LA NUEVA JUGADA EN BASE A LOS ANTERIORES METODOS
   //PUEDE SER UTILIZADO O NO
   definePlay(myPlay: Jugada, computerPlay: Jugada) {
@@ -453,13 +519,6 @@ const state = {
 
     // 2 y 3 - DEFINE QUIEN GANA
     const resulado = state.whoWins(myMove, computerMove);
-
-    // 4 - CREA UN REGISTRO DEL JUEGO Y LO AGREGA AL HISTORIAL
-    const newRecord = {
-      myPlay: myMove,
-      computerPlay: computerMove,
-    };
-    state.pushNewGameHistory(newRecord);
 
     //CREA EL NUEVO ESTADO
     const newState = state.getState();

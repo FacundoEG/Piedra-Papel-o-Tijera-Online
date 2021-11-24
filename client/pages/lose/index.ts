@@ -8,6 +8,7 @@ class LosePage extends HTMLElement {
   shadow: ShadowRoot;
   stateData: any;
   currentGame: any;
+  currentScore: any;
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
@@ -54,7 +55,6 @@ class LosePage extends HTMLElement {
   border: 10px solid #000000;
   box-sizing: border-box;
   border-radius: 10px;
-  width: 259px;
   height: 217px;
 }
 
@@ -89,13 +89,16 @@ class LosePage extends HTMLElement {
   connectedCallback() {
     state.subscribe(() => {
       const currentState = state.getState();
+      this.currentScore = currentState.roomScore;
       this.currentGame = currentState.currentGame;
       this.stateData = currentState;
+      this.shadow.children[1].remove();
+      this.render();
     });
     const currentState = state.getState();
+    this.currentScore = currentState.roomScore;
     this.currentGame = currentState.currentGame;
     this.stateData = currentState;
-    // RENDERIZA LA PAGE
     this.render();
   }
   render() {
@@ -103,18 +106,17 @@ class LosePage extends HTMLElement {
     const mainPage = document.createElement("main");
     mainPage.classList.add("loss-container");
 
-    const playerRef = state.getSessionUserRef()[1];
-    const rivalRef = state.getRivalUserRef()[1];
+    const currentScore = this.currentScore;
 
     //SE RENDERIZA
     mainPage.innerHTML = `
     <div class="loss-star">Perdiste!</div>
     <div class="score-table">
     <h3>Score</h3>
-    <h4>${playerRef["playerName"]}: ${0}</h4>
-    <h4>${rivalRef["playerName"]}: ${0}</h4>
+    <h4>${currentScore.player1.name}: ${currentScore.player1.score}</h4>
+    <h4>${currentScore.player2.name}: ${currentScore.player2.score}</h4>
     </div>
-    <menu-button class="waitingroom-button">Regresar a la sala</menu-button>
+    <menu-button class="waitingroom-button">Volver a jugar!</menu-button>
     `;
 
     this.shadow.appendChild(mainPage);

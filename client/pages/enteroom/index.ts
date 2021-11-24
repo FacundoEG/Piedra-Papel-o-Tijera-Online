@@ -217,9 +217,9 @@ class EnterRoomPage extends HTMLElement {
                     state.setLongRoomId(res.rtdbRoomId);
                     state.connectToGamerooms(res.rtdbRoomId);
 
-                    // SE ESTABLECE UN LISTENER PARA LA CONEXION QUE CAMBIARA DE PAGINA SOLO CUANDO CURRENTGAMEFLAG SEA TRUE
+                    // SE ESTABLECE UN LISTENER PARA LA CONEXION QUE CAMBIARA DE PAGINA SOLO CUANDO CSGAMEFLAG Y CSSCOREFLAG SEA TRUE
                     const conectionListener = setInterval(() => {
-                      if (state.currentGameFlag()) {
+                      if (state.currentGameFlag() && state.currentScoreFlag()) {
                         clearInterval(conectionListener);
                         state.redirectPlayers();
                       }
@@ -252,9 +252,9 @@ class EnterRoomPage extends HTMLElement {
                 state.setLongRoomId(res.rtdbRoomId);
                 state.connectToGamerooms(res.rtdbRoomId);
 
-                // SE ESTABLECE UN LISTENER PARA LA CONEXION QUE CAMBIARA DE PAGINA SOLO CUANDO CURRENTGAMEFLAG SEA TRUE
+                // SE ESTABLECE UN LISTENER PARA LA CONEXION QUE CAMBIARA DE PAGINA SOLO CUANDO CSGAMEFLAG Y CSSCOREFLAG SEA TRUE
                 const conectionListener = setInterval(() => {
-                  if (state.currentGameFlag()) {
+                  if (state.currentGameFlag() && state.currentScoreFlag()) {
                     clearInterval(conectionListener);
                     state.redirectPlayers();
                   }

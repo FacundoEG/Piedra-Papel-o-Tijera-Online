@@ -10,6 +10,8 @@ class Home extends HTMLElement {
   shadow: ShadowRoot;
   stateData: any;
   currentGame: any;
+  currentScore: any;
+  fireBaseData: any;
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
@@ -78,14 +80,6 @@ class Home extends HTMLElement {
       display:flex;
       height: 100%;
       gap: 5px;
-    }
-
-    
-
-    @media (min-width: 750px) {
-      .players-name,.room-id {
-        width: 35%;
-      }
     }
 
     .players-name{
@@ -218,12 +212,14 @@ class Home extends HTMLElement {
   connectedCallback() {
     state.subscribe(() => {
       const currentState = state.getState();
+      this.currentScore = currentState.roomScore;
       this.currentGame = currentState.currentGame;
       this.stateData = currentState;
       this.shadow.children[1].remove();
       this.render();
     });
     const currentState = state.getState();
+    this.currentScore = currentState.roomScore;
     this.currentGame = currentState.currentGame;
     this.stateData = currentState;
     this.render();
@@ -233,31 +229,25 @@ class Home extends HTMLElement {
     //SE CREA EL DIV DONDE SE ALOJARA LA PAGE
     const mainPage = document.createElement("main");
     mainPage.classList.add("welcome-container");
-
-    const currentGame = this.currentGame;
-    console.log(currentGame);
+    const currentScore = this.currentScore;
 
     //SE RENDERIZA JUNTO CON LOS DATOS DESDE EL STATE
     mainPage.innerHTML = `
     <header class="score-header">
      <div class="players-name">
      <span class="score-title">${
-       currentGame.player1.playerName !== undefined
-         ? currentGame.player1.playerName + ":"
+       currentScore.player1.name !== undefined
+         ? currentScore.player1.name + ":"
          : ""
      } ${
-      currentGame.player1.playerScore !== undefined
-        ? currentGame.player1.playerScore
-        : ""
+      currentScore.player1.score !== undefined ? currentScore.player1.score : ""
     }</in-title></span>
      <span class="score-title rival-player">${
-       currentGame.player2.playerName !== "none"
-         ? currentGame.player2.playerName + ":"
+       currentScore.player2.name !== "none"
+         ? currentScore.player2.name + ":"
          : ""
      } ${
-      currentGame.player2.playerName !== "none"
-        ? currentGame.player2.playerScore
-        : ""
+      currentScore.player2.score !== "none" ? currentScore.player2.score : ""
     }</in-title></span>
      </div>
      <div class="room-id">

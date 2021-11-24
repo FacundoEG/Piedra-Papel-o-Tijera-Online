@@ -240,18 +240,43 @@ class Game extends HTMLElement {
             function redirect() {
               const actualPlayerRef = state.getSessionUserRef()[0];
               const restartPromise = state.restartPlayer(actualPlayerRef);
-              if (finalResult == "victoria") {
-                console.log("va hacia victoria");
 
-                restartPromise.then(() => {
-                  Router.go("/win-page");
+              // SI EL JUGADOR GANA, SE ADQUIEREN SU REFERENCIA Y EL ROOMID
+              if (finalResult == "victoria") {
+                const cs = state.getState();
+                const roomId = cs.roomId;
+                const actualPlayerRef = state.getSessionUserRef();
+                const userName = actualPlayerRef[1]["playerName"];
+                const userRef = actualPlayerRef[0];
+
+                // SE PREPARA EL BODY PARA LA PETICIÓN DE AGREGAR UN PUNTO AL SCORE
+                const userData = {
+                  playerName: userName,
+                  playerRef: userRef,
+                };
+
+                // SE DECLARA LA PROMESA DE AGREGAR UN PUNTO AL GANADOR
+                const addWinnerScorePromise = state.addWinScore(
+                  userData,
+                  roomId
+                );
+
+                // UNA VEZ QUE LA PROMESA SE RESUELVE, SE VA A LA WIN PAGE
+                addWinnerScorePromise.then(() => {
+                  restartPromise.then(() => {
+                    Router.go("/win-page");
+                  });
                 });
               }
+
+              // SI EL JUGADOR PERDIO, NO SE LE AGREGA PUNTOS
               if (finalResult == "derrota") {
                 restartPromise.then(() => {
                   Router.go("/lose-page");
                 });
               }
+
+              // SI AMBOS JUGADORES EMPATAN, NO RECIBEN PUNTOS
               if (finalResult == "empate") {
                 restartPromise.then(() => {
                   Router.go("/draw-page");

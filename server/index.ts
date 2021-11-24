@@ -95,6 +95,16 @@ app.post("/gamerooms", (req, res) => {
               .doc(roomId.toString())
               .set({
                 rtdbRoomId: roomLongId,
+                score: {
+                  player1: {
+                    name: ownerName,
+                    score: 0,
+                  },
+                  player2: {
+                    name: "none",
+                    score: "none",
+                  },
+                },
               })
               // DEVUELVE EL ID CORTO
               .then(() => {
@@ -109,6 +119,74 @@ app.post("/gamerooms", (req, res) => {
           message: "El id del usuario no existe.",
         });
       }
+    });
+});
+
+// AGREGA EL SCORE Y EL NOMBRE INICIAL DEL PLAYER 2 A FIRESTORE
+app.post("/gameroomsscore/:roomid", (req, res) => {
+  const gameRoomId = req.params.roomid;
+  const playerName = req.body.playerName;
+  gameroomsCollectionRef
+    .doc(gameRoomId.toString())
+    .get()
+    .then((snap) => {
+      const actualData = snap.data();
+      console.log(actualData);
+      actualData.score["player2"] = {
+        name: playerName,
+        score: 0,
+      };
+      gameroomsCollectionRef
+        .doc(gameRoomId.toString())
+        .update(actualData)
+        .then(() => {
+          res.json({
+            message: "el score se actualizo correctamente",
+          });
+        });
+    });
+});
+
+// AGREGA UN PUNTO AL SCORE DE FIREBASE, PIDIENDO PARAMETRO EL ROOMID Y EL NOMBRE DEL USUARIO Y SU POSICIÓN EN EL JUEGO COMO REFERENCIA
+app.post("/gamedatascore/:roomid", (req, res) => {
+  const gameRoomId = req.params.roomid;
+  const playerName = req.body.playerName;
+  const playerRef = req.body.playerRef;
+  gameroomsCollectionRef
+    .doc(gameRoomId.toString())
+    .get()
+    .then((snap) => {
+      const actualData = snap.data();
+      console.log(actualData.score[playerRef].score);
+
+      const newscore = actualData.score[playerRef].score + 1;
+
+      console.log(newscore);
+
+      actualData.score[playerRef] = {
+        name: playerName,
+        score: newscore,
+      };
+      gameroomsCollectionRef
+        .doc(gameRoomId.toString())
+        .update(actualData)
+        .then(() => {
+          res.json({
+            message: "el score  se actualizo correctamente",
+          });
+        });
+    });
+});
+
+// DEVUELVE EL SCORE DE LA BASE DE DATOS DE FIREBASE
+app.get("/gameroomsscores/:roomid", (req, res) => {
+  const gameRoomId = req.params.roomid;
+  gameroomsCollectionRef
+    .doc(gameRoomId.toString())
+    .get()
+    .then((snap) => {
+      const actualData = snap.data();
+      res.json(actualData.score);
     });
 });
 
