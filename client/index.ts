@@ -16,6 +16,7 @@ import "./router";
 import { state } from "./state";
 
 (function () {
+  // RECUPERA EL ESTADO GUARDADO EN SESSION STORAGE
   state.restoreState();
   console.log("hola");
 })();

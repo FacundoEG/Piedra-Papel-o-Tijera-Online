@@ -19,24 +19,7 @@ type Game = {
 const state = {
   data: {
     // SE GUARDA LA JUGADA EN EL MOMENTO
-    currentGame: {
-      /* 
-      player1: {
-        choice: "undefined",
-        online: true,
-        playerName: "Pepe",
-        playerScore: 0,
-        start: true,
-      },
-      player2: {
-        choice: "undefined",
-        online: true,
-        playerName: "Juan",
-        playerScore: 0,
-        start: true,
-      },
-     */
-    },
+    currentGame: {},
     playerName: null,
     roomId: null,
     roomIdLong: null,

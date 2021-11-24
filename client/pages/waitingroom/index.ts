@@ -280,7 +280,7 @@ class Home extends HTMLElement {
     window.onbeforeunload = function disconectPlayer() {
       console.log("esta funcando el onbefore");
       const actualPlayerRef = state.getSessionUserRef()[0];
-      state.disconnectPlayer(actualPlayerRef);
+      state.restartPlayer(actualPlayerRef);
     };
   }
 }

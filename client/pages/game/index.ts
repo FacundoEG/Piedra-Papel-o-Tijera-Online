@@ -318,9 +318,8 @@ class Game extends HTMLElement {
 
     // SI EL USUARIO CIERRA LA PAGINA, SU USUARIO SE DESCOENCTA DE LA RTBD
     window.onbeforeunload = function disconectPlayer() {
-      console.log("esta funcando el onbefore");
       const actualPlayerRef = state.getSessionUserRef()[0];
-      state.disconnectPlayer(actualPlayerRef);
+      state.restartPlayer(actualPlayerRef);
     };
   }
 }
