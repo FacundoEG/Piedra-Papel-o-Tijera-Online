@@ -17,13 +17,8 @@ app.use(express.json());
 app.use(cors());
 
 // ENDPOINTS
-app.get("/env", (req, res) => {
-  res.json({
-    environment: "hola",
-  });
-});
 
-// SIGNUP
+// SIGNUP - CREA UN NUEVO USUARIO EN FIRESTORE
 app.post("/signup", function (req, res) {
   var userName = req.body.name;
   usersCollectionRef
@@ -49,7 +44,7 @@ app.post("/signup", function (req, res) {
     });
 });
 
-// CREA UN NUEVO GAMEROOM
+// CREA UN NUEVO GAMEROOM DENTRO DE LA RTDB Y AL MISMO TIEMPO SETEA CREA Y SETEA LOS DATOS EN FIRESTORE
 app.post("/gamerooms", (req, res) => {
   const userId = req.body.userId;
   const ownerName = req.body.ownerName;
@@ -157,11 +152,8 @@ app.post("/gamedatascore/:roomid", (req, res) => {
     .get()
     .then((snap) => {
       const actualData = snap.data();
-      console.log(actualData.score[playerRef].score);
 
       const newscore = actualData.score[playerRef].score + 1;
-
-      console.log(newscore);
 
       actualData.score[playerRef] = {
         name: playerName,
@@ -190,7 +182,7 @@ app.get("/gameroomsscores/:roomid", (req, res) => {
     });
 });
 
-// DEVUELVE EL LARGO VERIFICANDO EL USERID Y EL GAMEROOMID
+// DEVUELVE EL ID LARGO VERIFICANDO EL USERID Y EL GAMEROOMID
 app.get("/gamerooms/:roomId", (req, res) => {
   const { userId } = req.query;
   const { roomId } = req.params;
