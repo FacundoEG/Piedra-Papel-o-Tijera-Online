@@ -11,7 +11,6 @@ class Home extends HTMLElement {
   stateData: any;
   currentGame: any;
   currentScore: any;
-  fireBaseData: any;
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
@@ -157,6 +156,7 @@ class Home extends HTMLElement {
     // DECLARA UN FLAG QUE SI AMBOS JUGADORES ESTAN ONLINE SE DEVOLVERA TRUE
     const bothPlayersOnline =
       cs.player1.online == true && cs.player2.online == true;
+
     // SI AMBOS JUGADORES ESTAN CONECTADOS, APARECE EL START-CONTAINER
     if (bothPlayersOnline) {
       const codeContainer = this.shadow.querySelector(".code-container");
@@ -276,9 +276,8 @@ class Home extends HTMLElement {
     // SE AGREGAN LOS LISTENERS
     this.addListeners();
 
-    // SI EL USUARIO CIERRA LA PAGINA, SU USUARIO SE DESCOENCTA DE LA RTBD
+    // SI EL USUARIO CIERRA LA PAGINA, SE REINICIA SU START DE LA RTBD
     window.onbeforeunload = function disconectPlayer() {
-      console.log("esta funcando el onbefore");
       const actualPlayerRef = state.getSessionUserRef()[0];
       state.restartPlayer(actualPlayerRef);
     };

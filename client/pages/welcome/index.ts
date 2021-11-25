@@ -1,4 +1,3 @@
-import { state } from "../../state";
 import { Router } from "@vaadin/router";
 
 const piedraImg = require("url:../../assets/piedra.svg");

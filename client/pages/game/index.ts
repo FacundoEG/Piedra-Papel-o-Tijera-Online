@@ -1,9 +1,6 @@
 import { state } from "../../state";
 import { Router } from "@vaadin/router";
 
-const piedraImg = require("url:../../assets/piedra.svg");
-const papelImg = require("url:../../assets/papel.svg");
-const tijerasIMG = require("url:../../assets/tijera.svg");
 const backgroundIMG = require("url:../../assets/fondo.png");
 
 class Game extends HTMLElement {
@@ -316,7 +313,7 @@ class Game extends HTMLElement {
     // SE AGREGAN LOS LISTENERS
     this.addListeners();
 
-    // SI EL USUARIO CIERRA LA PAGINA, SU USUARIO SE DESCOENCTA DE LA RTBD
+    // SI EL USUARIO CIERRA LA PAGINA, SE REINICIA SU START DE LA RTBD
     window.onbeforeunload = function disconectPlayer() {
       const actualPlayerRef = state.getSessionUserRef()[0];
       state.restartPlayer(actualPlayerRef);

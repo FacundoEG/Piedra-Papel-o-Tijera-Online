@@ -1,24 +1,15 @@
-// Guardar info para compartir entre pages / componentes
-// Guardar en localStorage lo necesario
-// Interactuar con localStorage / API
 import { Router } from "@vaadin/router";
 import { realtimeDB } from "./rtdb";
 
-/* const API_BASE_URL = "http://localhost:3000"; */
 const API_BASE_URL = "https://p-p-t-v2.herokuapp.com";
 
 //TYPES
 type Jugada = "piedra" | "papel" | "tijeras";
 type User = "myPlay" | "computerPlay";
-type Score = "myScore" | "computerScore";
-type Game = {
-  myPlay: Jugada;
-  computerPlay: Jugada;
-};
 
 const state = {
   data: {
-    // SE GUARDA LA JUGADA EN EL MOMENTO
+    // DATA DEL STATE INICIAL
     currentGame: {},
     playerName: null,
     roomId: null,
@@ -50,8 +41,7 @@ const state = {
     this.listeners.push(callback);
   },
 
-  //////////// BACK-END //////////////
-
+  // SETEA EL NOMBRE DEL JUGADOR
   setPlayerName(nombre: string) {
     const currentState = this.getState();
     currentState.playerName = nombre;
@@ -71,6 +61,8 @@ const state = {
     currentState.roomIdLong = roomId;
     this.setState(currentState);
   },
+
+  //////////// BACK-END METHODS //////////////
 
   // CREA UN NUEVO USUARIO Y DEVUELVE SU ID
   createNewUser(userData) {
@@ -117,7 +109,7 @@ const state = {
       });
   },
 
-  // AGREGA EL SCORE DEL PLAYER 2 A FIRESTORE UNA VEZ QUE SE AGREGA UN SEGUNDO JUGADOR A LA SALA
+  // AGREGA UN PUNTO AL JUGADOR QUE GANO LA PARTIDA DENTRO DEL GAMEROOM DE FIRESTORE
   addWinScore(playerData, roomId) {
     return fetch(API_BASE_URL + "/gamedatascore/" + roomId, {
       method: "post",
@@ -132,7 +124,7 @@ const state = {
       });
   },
 
-  // AGREGA EL SCORE DEL PLAYER 2 A FIRESTORE UNA VEZ QUE SE AGREGA UN SEGUNDO JUGADOR A LA SALA
+  // TRAE LA DATA DE LOS SCORES DEL GAMERROM GUARDADOS EN FIREBASE
   importGameRoomScore(roomId) {
     return fetch(API_BASE_URL + "/gameroomsscores/" + roomId, {
       method: "get",
@@ -220,7 +212,7 @@ const state = {
     });
   },
 
-  // IMPORTA LA DATA DEL GAMEROOM Y ESCUCHA LOS CAMBIOS
+  // RECONECTA AL JUGADOR AL RECARGAR LA AL GAMEROOM Y ESCUCHA LOS CAMBIOS
   reconnectToGamerooms(roomId) {
     const chatroomRef = realtimeDB.ref("/gamerooms/" + roomId + "/currentgame");
     chatroomRef.on("value", (snapshot) => {
@@ -230,15 +222,6 @@ const state = {
       // CARGA LA DATA AL STATE
       const currentState = this.getState();
       currentState.currentGame = gameRoomData;
-      /* 
-      const fireBaseScorePromise = state.importGameRoomScore(
-        currentState.roomId
-      );
-
-      fireBaseScorePromise.then((scoreData) => {
-        currentState.roomScore = scoreData;
-        this.setState(currentState);
-      }); */
     });
   },
 
@@ -266,14 +249,13 @@ const state = {
       });
     }
 
-    // SI EL PLAYER 1 ESTA CONECTADO Y REGISTRADO & EL 2 DESCONECTADO Y SIN REGISTRAR, LO REGISTRA/CONECTA AL PLAYER 2
+    // SI EL PLAYER 1 ESTA CONECTADO Y REGISTRADO & EL 2 DESCONECTADO Y SIN REGISTRAR, LO REGISTRA/CONECTA AL PLAYER 2 EN AMBAS DB
     else if (
       currentGame.player1.playerName !== "none" &&
       currentGame.player1.online !== false &&
       currentGame.player2.playerName === "none" &&
       currentGame.player2.online === false
     ) {
-      // PROMESA DE CONEXIÓN DEL JUGADOR 2
       // SE VUELVEN A PEDIR LOS DATOS AL STATE
       const cs = state.getState();
       const actualRoomId = cs.roomId;
@@ -289,6 +271,7 @@ const state = {
         actualRoomId
       );
 
+      // PROMESA DE CONEXIÓN DEL JUGADOR 2
       player2ScorePromise.then(() => {
         const playerConnectionPromise = state.connectPlayer("player2");
         playerConnectionPromise.then(() => {
@@ -332,7 +315,7 @@ const state = {
     }
   },
 
-  // VERIFICA QUE EL ROOMSCORE NO ESTE VACIO
+  // VERIFICA QUE EL ROOMSCORE NO ESTE VACIO DEVOLVIENDO TRUE DE SER ASÍ
   currentScoreFlag() {
     let cs = state.getState();
     let currentScore = cs.roomScore;
@@ -346,7 +329,6 @@ const state = {
     const currentState = this.getState();
     const currentGameData = currentState.currentGame[`${player}`];
 
-    // TOMA EL NOMBRE Y EL ROOMID
     const gameRoomId = currentState.roomIdLong;
     const playerName = currentState.playerName;
 
@@ -367,7 +349,7 @@ const state = {
     );
   },
 
-  // DESCONECTA A LOS JUGADORES A LA GAMEROOM
+  /*   // DESCONECTA A LOS JUGADORES A LA GAMEROOM (ESTA COMENTADO AL SER UNA PRUEBA)
   disconnectPlayer(player: string) {
     const currentState = this.getState();
     const currentGameData = currentState.currentGame[`${player}`];
@@ -391,9 +373,9 @@ const state = {
         body: JSON.stringify(connectedUserData),
       }
     );
-  },
+  }, */
 
-  // DESCONECTA A LOS JUGADORES A LA GAMEROOM
+  // REINICIA EL CONTADOR START DEL JUGADOR
   restartPlayer(player: string) {
     const currentState = this.getState();
     const currentGameData = currentState.currentGame[`${player}`];
@@ -467,7 +449,7 @@ const state = {
     );
   },
 
-  //////////// FRONT-END /////////////
+  //////////// FRONT-END METHODS /////////////
 
   // 1 - SETEA/DEFINE LA JUGADA REALIZADA
   setMove(move: Jugada, user: User) {
@@ -502,13 +484,6 @@ const state = {
     }
   },
 
-  // 3 - AGREGA UN PUNTO, SE PASA QUIEN GANO COMO PARAMETRO
-  setPoints(user: Score) {
-    const CurrentState = state.getState();
-    const score = CurrentState.results[user] + 1;
-    CurrentState.results[user] = score;
-  },
-
   //DEFINE LA NUEVA JUGADA EN BASE A LOS ANTERIORES METODOS
   //PUEDE SER UTILIZADO O NO
   definePlay(myPlay: Jugada, computerPlay: Jugada) {
@@ -522,14 +497,13 @@ const state = {
     const myMove = currentGame.myPlay;
     const computerMove = currentGame.computerPlay;
 
-    // 2 y 3 - DEFINE QUIEN GANA
+    // 2 - DEFINE QUIEN GANA
     const resulado = state.whoWins(myMove, computerMove);
 
-    //CREA EL NUEVO ESTADO
-    const newState = state.getState();
-    state.setState(newState);
     return resulado;
   },
+
+  //////////// RESTORE STATE METHODS /////////////
 
   //SI NO HAY REGISTRO DE "ACTUALGAME", SE ASEGURA DE INICIAR EL STATE VACIO
   restoreState() {

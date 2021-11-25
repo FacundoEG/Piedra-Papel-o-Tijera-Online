@@ -6,8 +6,6 @@ const loseStarIMG = require("url:../../assets/stared.svg");
 
 class LosePage extends HTMLElement {
   shadow: ShadowRoot;
-  stateData: any;
-  currentGame: any;
   currentScore: any;
   constructor() {
     super();
@@ -90,15 +88,11 @@ class LosePage extends HTMLElement {
     state.subscribe(() => {
       const currentState = state.getState();
       this.currentScore = currentState.roomScore;
-      this.currentGame = currentState.currentGame;
-      this.stateData = currentState;
       this.shadow.children[1].remove();
       this.render();
     });
     const currentState = state.getState();
     this.currentScore = currentState.roomScore;
-    this.currentGame = currentState.currentGame;
-    this.stateData = currentState;
     this.render();
   }
   render() {
@@ -124,7 +118,7 @@ class LosePage extends HTMLElement {
     // SE AGREGAN LOS LISTENERS
     this.addListeners();
 
-    // SI EL USUARIO CIERRA LA PAGINA, SU USUARIO SE DESCOENCTA DE LA RTBD
+    // SI EL USUARIO CIERRA LA PAGINA, SE REINICIA SU START DE LA RTBD
     window.onbeforeunload = function disconectPlayer() {
       const actualPlayerRef = state.getSessionUserRef()[0];
       state.restartPlayer(actualPlayerRef);
