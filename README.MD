@@ -1,4 +1,4 @@
-DESAFÍO FINAL APX - MODULO 6
+WEBAPP PIEDRA PAPEL O TIJERA ONLINE (TWO PLAYER MODE)
 
 Link de acceso a la webapp en Heroku: https://p-p-t-v2.herokuapp.com
 
